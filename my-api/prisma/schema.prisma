@@ -1,0 +1,46 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Thread {
+  id        String    @id @default(cuid()) // 既存IDを使いたい場合は create 時に上書き可
+  title     String    @default("")
+  archived  Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  messages  Message[]
+
+  @@index([archived, updatedAt])
+  @@index([title])
+}
+
+model Message {
+  id        String    @id @default(cuid())
+  threadId  String
+  role      Role
+  content   Json
+  createdAt DateTime  @default(now())
+
+  thread    Thread    @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@index([threadId, createdAt])
+}
+
+enum Role {
+  user
+  assistant
+  system
+}
